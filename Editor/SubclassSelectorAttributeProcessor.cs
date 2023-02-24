@@ -10,6 +10,8 @@ internal sealed class SubclassSelectorAttributeProcessor<T> : OdinAttributeProce
 	#region Internal Members
 
 	private SubclassSelectorAttribute subclassSelector;
+	private ICollectionResolver collectionResolver;
+
 	private bool isCollection = false;
 	private bool parentIsCollection = false;
 
@@ -25,19 +27,21 @@ internal sealed class SubclassSelectorAttributeProcessor<T> : OdinAttributeProce
 		}
 
 		bool isUnityObject;
-		if (property.ChildResolver is ICollectionResolver collectionResolver)
+		collectionResolver = property.ChildResolver as ICollectionResolver;
+		isCollection = collectionResolver != null;
+
+		if (isCollection)
 		{
-			isCollection = true;
 			Type elementType = collectionResolver.ElementType;
 			isUnityObject = typeof(UnityEngine.Object).IsAssignableFrom(elementType);
 			return !isUnityObject;
 		}
 		else
 		{
-			isCollection = false;
-			parentIsCollection = typeof(ICollectionResolver).IsAssignableFrom(property.ParentValueProperty?.ChildResolver?.GetType() ?? null);
+			collectionResolver = property.ParentValueProperty?.ChildResolver as ICollectionResolver ?? null;
+			parentIsCollection = collectionResolver != null;
 			isUnityObject = typeof(UnityEngine.Object).IsAssignableFrom(property.ValueEntry.BaseValueType);
-			
+
 			if (parentIsCollection)
 			{
 				return !isUnityObject && subclassSelector.DrawDropdownForListElements;
@@ -50,7 +54,7 @@ internal sealed class SubclassSelectorAttributeProcessor<T> : OdinAttributeProce
 	}
 
 	public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
-	{			
+	{
 		var hideReferencePicker = property.Attributes.GetAttribute<HideReferenceObjectPickerAttribute>();
 		if (subclassSelector.HideReferencePicker && hideReferencePicker == null)
 		{
@@ -58,8 +62,19 @@ internal sealed class SubclassSelectorAttributeProcessor<T> : OdinAttributeProce
 			attributes.Add(hideReferencePicker);
 		}
 
+		var hideLabel = property.Attributes.GetAttribute<HideLabelAttribute>();
+
+		if (subclassSelector.HideClassLabel && hideLabel == null)
+		{
+			hideLabel = new HideLabelAttribute();
+			attributes.Add(hideLabel);
+		}
+
 		if (isCollection)
 		{
+			var labelText = new LabelTextAttribute(property.NiceName);
+			attributes.Add(labelText);
+
 			var lds = property.Attributes.GetAttribute<ListDrawerSettingsAttribute>();
 
 			if (lds == null)
@@ -69,17 +84,15 @@ internal sealed class SubclassSelectorAttributeProcessor<T> : OdinAttributeProce
 			}
 
 			lds.CustomAddFunction = SubclassSelectorUtilities.OpenSubclassSelectorString;
+
+			if (subclassSelector.DrawBoxForListElements)
+			{
+				lds.OnBeginListElementGUI = SubclassSelectorUtilities.OnBeginBoxSubclassElementString;
+				lds.OnEndListElementGUI = SubclassSelectorUtilities.OnEndBoxSubclassElementString;
+			}
 		}
 		else
 		{
-			var hideLabel = property.Attributes.GetAttribute<HideLabelAttribute>();
-
-			if (subclassSelector.HideClassLabel && hideLabel == null)
-			{
-				hideLabel = new HideLabelAttribute();
-				attributes.Add(hideLabel);
-			}
-
 			var typeFilter = new TypeFilterAttribute(SubclassSelectorUtilities.TypeFilterResolverString);
 
 			if (parentIsCollection)
@@ -98,5 +111,6 @@ internal sealed class SubclassSelectorAttributeProcessor<T> : OdinAttributeProce
 	}
 
 	#endregion
+}
 }
 #endif

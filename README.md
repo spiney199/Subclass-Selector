@@ -68,3 +68,4 @@ public static class PlainClasses
 + **DrawDropdownForListElements** - False by default. Shows or hides the type selection dropdown when *[SubclassSelector]* is used on a collection.
 + **HideClassLabel** - True by default. Acts as in integrated `[HideLabel]`. Only works on non-collection members.
 + **CustomTypeFilter** - A string resolved as a ValueResolver. Can be used to add extra filtering logic after all sub-types are generated. Provides a System.Type `$type` named value. Note that abstract types are already filtered.
++ **DrawBoxForListElements** - If true, will draw collection elements in a BoxGroup-style box. 

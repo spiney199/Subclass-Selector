@@ -51,6 +51,14 @@ public sealed class SubclassSelectorAttribute : Attribute
 	public bool DrawDropdownForListElements { get; set; } = false;
 
 	/// <summary>
+	/// If true, will draw a BoxGroup-style box around each element of a collection.
+	/// </summary>
+	/// <remarks>
+	/// False by default. Only affects collections.
+	/// </remarks>
+	public bool DrawBoxForListElements { get; set; } = false;
+
+	/// <summary>
 	/// If true, will hide the class' label as if it had been decorated with <see cref="Sirenix.OdinInspector.HideLabelAttribute"/>.
 	/// </summary>
 	/// <remarks>

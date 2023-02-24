@@ -21,6 +21,10 @@ public static class SubclassSelectorUtilities
 
 	public static string TypeFilterResolverString => $"@{nameof(SubclassSelectorUtilities)}.{nameof(GetSubclassSelectorDropdownItems)}($property)";
 
+	public static string OnBeginBoxSubclassElementString => $"@{nameof(SubclassSelectorUtilities)}.{nameof(BeginDrawBoxedSubclassElement)}($property, $index)";
+
+	public static string OnEndBoxSubclassElementString => $"@{nameof(SubclassSelectorUtilities)}.{nameof(EndDrawBoxedSubclassElement)}()";
+
 	#endregion
 
 	#region Validation and Data Retreival
@@ -78,7 +82,7 @@ public static class SubclassSelectorUtilities
 		}
 	}
 
-	public static string GetTypeSubclassPath(this Type type)
+	public static string GetTypeSubclassPath(Type type)
 	{
 		SubclassPathAttribute pathAttribute = type.GetAttribute<SubclassPathAttribute>();
 
@@ -160,7 +164,7 @@ public static class SubclassSelectorUtilities
 
 		static ValueDropdownItem<Type> GetDropdownItem(Type type)
 		{
-			string name = type.GetTypeSubclassPath();
+			string name = GetTypeSubclassPath(type);
 			return new ValueDropdownItem<Type>(name, type);
 		}
 	}
@@ -180,7 +184,7 @@ public static class SubclassSelectorUtilities
 		List<GenericSelectorItem<Type>> selectorTypes = new List<GenericSelectorItem<Type>>();
 		foreach (Type type in types)
 		{
-			string name = type.GetTypeSubclassPath();
+			string name = GetTypeSubclassPath(type);
 			var selectorItem = new GenericSelectorItem<Type>(name, type);
 
 			selectorTypes.Add(selectorItem);
@@ -253,6 +257,20 @@ public static class SubclassSelectorUtilities
 				property.Children.Update();
 			}
 		}
+	}
+
+	public static void BeginDrawBoxedSubclassElement(InspectorProperty property, int index)
+	{
+		var child = property.Children[index];
+		var subclassPath = child.ValueEntry.TypeOfValue.GetAttribute<SubclassPathAttribute>();
+		string groupName = subclassPath?.SubClassName ?? child.ValueEntry.TypeOfValue.GetNiceName();
+		groupName = groupName.Replace('.', '-');
+		SirenixEditorGUI.BeginBox(groupName, centerLabel: true);
+	}
+
+	public static void EndDrawBoxedSubclassElement()
+	{
+		SirenixEditorGUI.EndBox();
 	}
 
 	#endregion
