@@ -1,0 +1,25 @@
+{
+  "name": "com.spiney.odin-subclass-selector",
+  "version": "1.0.0",
+  "displayName": "Odin Subclass Selector",
+  "description": "",
+  "unity": "2020.3",
+  "unityRelease": "21f1",
+  "licensesUrl": "https://github.com/spiney199/Subclass-Selector/blob/main/LICENSE",
+  "author": {
+    "name": "",
+    "email": "",
+    "url": ""
+  },
+  "devDependencies": {
+  },
+  "dependencies": {
+   },
+  "samples": [
+    {
+      "displayName": "Sample Scripts",
+      "description": "Example scripts using SubclassSelector attribute",
+      "path": "Samples~/"
+    }
+  ]
+}
