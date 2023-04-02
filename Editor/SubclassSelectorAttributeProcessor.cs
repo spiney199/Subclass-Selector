@@ -112,5 +112,4 @@ internal sealed class SubclassSelectorAttributeProcessor<T> : OdinAttributeProce
 
 	#endregion
 }
-}
 #endif
