@@ -5,111 +5,114 @@ using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities;
 
-internal sealed class SubclassSelectorAttributeProcessor<T> : OdinAttributeProcessor<T> where T : class
+namespace Spiney.SubclassSelector
 {
-	#region Internal Members
-
-	private SubclassSelectorAttribute subclassSelector;
-	private ICollectionResolver collectionResolver;
-
-	private bool isCollection = false;
-	private bool parentIsCollection = false;
-
-	#endregion
-
-	#region Processor Overrides
-
-	public override bool CanProcessSelfAttributes(InspectorProperty property)
+	internal sealed class SubclassSelectorAttributeProcessor<T> : OdinAttributeProcessor<T> where T : class
 	{
-		if ((subclassSelector = property.Attributes.GetAttribute<SubclassSelectorAttribute>()) == null)
-		{
-			return false;
-		}
+		#region Internal Members
 
-		bool isUnityObject;
-		collectionResolver = property.ChildResolver as ICollectionResolver;
-		isCollection = collectionResolver != null;
+		private SubclassSelectorAttribute subclassSelector;
+		private ICollectionResolver collectionResolver;
 
-		if (isCollection)
-		{
-			Type elementType = collectionResolver.ElementType;
-			isUnityObject = typeof(UnityEngine.Object).IsAssignableFrom(elementType);
-			return !isUnityObject;
-		}
-		else
-		{
-			collectionResolver = property.ParentValueProperty?.ChildResolver as ICollectionResolver ?? null;
-			parentIsCollection = collectionResolver != null;
-			isUnityObject = typeof(UnityEngine.Object).IsAssignableFrom(property.ValueEntry.BaseValueType);
+		private bool isCollection = false;
+		private bool parentIsCollection = false;
 
-			if (parentIsCollection)
+		#endregion
+
+		#region Processor Overrides
+
+		public override bool CanProcessSelfAttributes(InspectorProperty property)
+		{
+			if ((subclassSelector = property.Attributes.GetAttribute<SubclassSelectorAttribute>()) == null)
 			{
-				return !isUnityObject && subclassSelector.DrawDropdownForListElements;
+				return false;
 			}
-			else
+
+			bool isUnityObject;
+			collectionResolver = property.ChildResolver as ICollectionResolver;
+			isCollection = collectionResolver != null;
+
+			if (isCollection)
 			{
+				Type elementType = collectionResolver.ElementType;
+				isUnityObject = typeof(UnityEngine.Object).IsAssignableFrom(elementType);
 				return !isUnityObject;
 			}
-		}
-	}
-
-	public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
-	{
-		var hideReferencePicker = property.Attributes.GetAttribute<HideReferenceObjectPickerAttribute>();
-		if (subclassSelector.HideReferencePicker && hideReferencePicker == null)
-		{
-			hideReferencePicker = new HideReferenceObjectPickerAttribute();
-			attributes.Add(hideReferencePicker);
-		}
-
-		var hideLabel = property.Attributes.GetAttribute<HideLabelAttribute>();
-
-		if (subclassSelector.HideClassLabel && hideLabel == null)
-		{
-			hideLabel = new HideLabelAttribute();
-			attributes.Add(hideLabel);
-		}
-
-		if (isCollection)
-		{
-			var labelText = new LabelTextAttribute(property.NiceName);
-			attributes.Add(labelText);
-
-			var lds = property.Attributes.GetAttribute<ListDrawerSettingsAttribute>();
-
-			if (lds == null)
+			else
 			{
-				lds = new ListDrawerSettingsAttribute();
-				attributes.Add(lds);
-			}
+				collectionResolver = property.ParentValueProperty?.ChildResolver as ICollectionResolver ?? null;
+				parentIsCollection = collectionResolver != null;
+				isUnityObject = typeof(UnityEngine.Object).IsAssignableFrom(property.ValueEntry.BaseValueType);
 
-			lds.CustomAddFunction = SubclassSelectorUtilities.OpenSubclassSelectorString;
-
-			if (subclassSelector.DrawBoxForListElements)
-			{
-				lds.OnBeginListElementGUI = SubclassSelectorUtilities.OnBeginBoxSubclassElementString;
-				lds.OnEndListElementGUI = SubclassSelectorUtilities.OnEndBoxSubclassElementString;
+				if (parentIsCollection)
+				{
+					return !isUnityObject && subclassSelector.DrawDropdownForListElements;
+				}
+				else
+				{
+					return !isUnityObject;
+				}
 			}
 		}
-		else
-		{
-			var typeFilter = new TypeFilterAttribute(SubclassSelectorUtilities.TypeFilterResolverString);
 
-			if (parentIsCollection)
+		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
+		{
+			var hideReferencePicker = property.Attributes.GetAttribute<HideReferenceObjectPickerAttribute>();
+			if (subclassSelector.HideReferencePicker && hideReferencePicker == null)
 			{
-				typeFilter.DrawValueNormally = true;
+				hideReferencePicker = new HideReferenceObjectPickerAttribute();
+				attributes.Add(hideReferencePicker);
+			}
+
+			var hideLabel = property.Attributes.GetAttribute<HideLabelAttribute>();
+
+			if (subclassSelector.HideClassLabel && hideLabel == null)
+			{
+				hideLabel = new HideLabelAttribute();
+				attributes.Add(hideLabel);
+			}
+
+			if (isCollection)
+			{
+				var labelText = new LabelTextAttribute(property.NiceName);
+				attributes.Add(labelText);
+
+				var lds = property.Attributes.GetAttribute<ListDrawerSettingsAttribute>();
+
+				if (lds == null)
+				{
+					lds = new ListDrawerSettingsAttribute();
+					attributes.Add(lds);
+				}
+
+				lds.CustomAddFunction = SubclassSelectorUtilities.OpenSubclassSelectorString;
+
+				if (subclassSelector.DrawBoxForListElements)
+				{
+					lds.OnBeginListElementGUI = SubclassSelectorUtilities.OnBeginBoxSubclassElementString;
+					lds.OnEndListElementGUI = SubclassSelectorUtilities.OnEndBoxSubclassElementString;
+				}
 			}
 			else
 			{
-				bool valueIsNull = property.ValueEntry.WeakSmartValue == null;
-				bool hidePicker = subclassSelector.HideReferencePicker;
-				typeFilter.DrawValueNormally = !valueIsNull || !hidePicker;
+				var typeFilter = new TypeFilterAttribute(SubclassSelectorUtilities.TypeFilterResolverString);
+
+				if (parentIsCollection)
+				{
+					typeFilter.DrawValueNormally = true;
+				}
+				else
+				{
+					bool valueIsNull = property.ValueEntry.WeakSmartValue == null;
+					bool hidePicker = subclassSelector.HideReferencePicker;
+					typeFilter.DrawValueNormally = !valueIsNull || !hidePicker;
+				}
+
+				attributes.Add(typeFilter);
 			}
-
-			attributes.Add(typeFilter);
 		}
-	}
 
-	#endregion
+		#endregion
+	}
 }
 #endif
