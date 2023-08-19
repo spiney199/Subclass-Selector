@@ -8,7 +8,7 @@ public static class PlainClasses
 	[SubclassPath(SubClassName = "Base Class")]
 	public class ClassBase : IBaseInterface
 	{
-		[field: SerializeField, HideInDerivedTypes]
+		[field: SerializeField]
 		public string TestString { get; set; }
 	}
 
