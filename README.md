@@ -66,6 +66,8 @@ public static class PlainClasses
 + **AllowDuplicates** - True by default. If set to fales, types already in a collection will not able to be added to said collection. Note that this doesn't include types derived from existing types.
 + **HideReferencePicker** - True by default. Hides or shows the default Odin object reference picker. Effectively behaves as an integrated `[HideReferenceObjectPicker]`.
 + **DrawDropdownForListElements** - False by default. Shows or hides the type selection dropdown when *[SubclassSelector]* is used on a collection.
-+ **HideClassLabel** - True by default. Acts as in integrated `[HideLabel]`. Only works on non-collection members.
++ **HideClassLabel** - False by default. Acts as in integrated `[HideLabel]` if true. Only works on non-collection members.
++ **DrawClassFoldout** - False by default. If true, the type selector will also include a dropdown to show/hide the class' properties.
++ **DrawBoxForListElements** - If true, will draw collection elements in a BoxGroup-style box. Only affects the elements of collections.
 + **CustomTypeFilter** - A string resolved as a ValueResolver. Can be used to add extra filtering logic after all sub-types are generated. Provides a System.Type `$type` named value. Note that abstract types are already filtered.
-+ **DrawBoxForListElements** - If true, will draw collection elements in a BoxGroup-style box. 
++ **OnTypesSelected** - An action resolver that can be used to override how types are initialised and added to either fields or collections. Collections provide a $type named parameter and passing a collection of selected types, and fields have a $type named parameter and pass the selected type.
