@@ -2,28 +2,24 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using UnityEditor;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.OdinInspector.Editor.ValueResolvers;
+using Sirenix.OdinInspector.Editor.ActionResolvers;
 using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
 
 /// <summary>
-/// Utility methods for use with <see cref="SubclassSelectorAttributeProcessor{T}"/>.
+/// Editor utility methods for use with <see cref="SubclassSelectorAttribute"/> and related drawers.
 /// </summary>
 public static class SubclassSelectorUtilities
 {
 	#region Resolver Strings
 
 	public static string OpenSubclassSelectorString => $"@{nameof(SubclassSelectorUtilities)}.{nameof(OpenSubclassCollectionSelector)}($property)";
-
-	public static string TypeFilterResolverString => $"@{nameof(SubclassSelectorUtilities)}.{nameof(GetSubclassSelectorDropdownItems)}($property)";
-
-	public static string OnBeginBoxSubclassElementString => $"@{nameof(SubclassSelectorUtilities)}.{nameof(BeginDrawBoxedSubclassElement)}($property, $index)";
-
-	public static string OnEndBoxSubclassElementString => $"@{nameof(SubclassSelectorUtilities)}.{nameof(EndDrawBoxedSubclassElement)}()";
 
 	#endregion
 
@@ -40,8 +36,8 @@ public static class SubclassSelectorUtilities
 
 		if (subclassSelector.HasCustomTypeFilter)
 		{
-			typeFilterResolver = ValueResolver.Get<bool>(inspectorProperty, subclassSelector.CustomTypeFilter, 
-				new NamedValue("type", typeof(Type)));
+			typeFilterResolver = ValueResolver.Get<bool>(inspectorProperty, subclassSelector.CustomTypeFilter,
+				new Sirenix.OdinInspector.Editor.ValueResolvers.NamedValue("type", typeof(Type)));
 
 			if (typeFilterResolver.HasError)
 			{
@@ -82,6 +78,10 @@ public static class SubclassSelectorUtilities
 		}
 	}
 
+	/// <summary>
+	/// Returns the path for a type, checking for <see cref="SubclassPathAttribute"/> and 
+	/// returning the specified path/name if present.
+	/// </summary>
 	public static string GetTypeSubclassPath(Type type)
 	{
 		SubclassPathAttribute pathAttribute = type.GetAttribute<SubclassPathAttribute>();
@@ -126,6 +126,9 @@ public static class SubclassSelectorUtilities
 
 	#region Field Methods
 
+	/// <summary>
+	/// Yields a collection of <see cref="ValueDropdownItem{T}"/> for all valid subtypes of the specified <see cref="InspectorProperty"/>.
+	/// </summary>
 	public static IEnumerable<ValueDropdownItem<Type>> GetSubclassSelectorDropdownItems(InspectorProperty property)
 	{
 		SubclassSelectorAttribute subclassSelector = property.Attributes.GetAttribute<SubclassSelectorAttribute>();
@@ -231,46 +234,74 @@ public static class SubclassSelectorUtilities
 
 		void AddSelectedTypes(IEnumerable<Type> selectedTypes)
 		{
-			foreach (var selection in selectedTypes)
+			ActionResolver onTypeSelected = null;
+
+			if (selectorAttribute.HasOnTypesSelected)
 			{
-				// prevent errors when selecting dropdown values
-				if (selection == null)
-				{
-					continue;
-				}
+				onTypeSelected = ActionResolver.Get(property, selectorAttribute.OnTypesSelected,
+					new Sirenix.OdinInspector.Editor.ActionResolvers.NamedValue("types", typeof(List<Type>)));
 
-				bool hasDefaultConstructor = selection.GetConstructor(Type.EmptyTypes) != null;
-				object[] values;
-
-				if (hasDefaultConstructor)
+				if (onTypeSelected.HasError)
 				{
-					var instance = Activator.CreateInstance(selection);
-					values = new object[] { instance };
+					Debug.LogError(onTypeSelected.ErrorMessage);
 				}
-				else
-				{
-					var instance = Sirenix.Serialization.UnitySerializationUtility.CreateDefaultUnityInitializedObject(selection);
-					values = new object[] { instance };
-				}
+			}
 
-				collectionResolver.QueueAdd(values);
-				property.Children.Update();
+			if (onTypeSelected != null && !onTypeSelected.HasError)
+			{
+				List<Type> onTypes = selectedTypes.ToList();
+				onTypeSelected.Context.NamedValues.Set("types", onTypes);
+				onTypeSelected.DoActionForAllSelectionIndices();
+			}
+			else
+			{
+				var values = new object[1] { null };
+
+				foreach (var selection in selectedTypes)
+				{
+					// prevent errors when selecting dropdown values
+					if (selection == null)
+					{
+						continue;
+					}
+
+					var instance = GetInstanceFromType(selection);
+					values[0] = instance;
+
+					collectionResolver.QueueAdd(values);
+					collectionResolver.ApplyChanges();
+				}
 			}
 		}
 	}
 
-	public static void BeginDrawBoxedSubclassElement(InspectorProperty property, int index)
+	/// <summary>
+	/// Creates an instance from the specified type, respecting default constructors if present. 
+	/// Otherwise a default Unity serialised instance is created.
+	/// </summary>
+	public static object GetInstanceFromType(Type type)
 	{
-		var child = property.Children[index];
-		var subclassPath = child.ValueEntry.TypeOfValue.GetAttribute<SubclassPathAttribute>();
-		string groupName = subclassPath?.SubClassName ?? child.ValueEntry.TypeOfValue.GetNiceName();
-		groupName = groupName.Replace('.', '-');
-		SirenixEditorGUI.BeginBox(groupName, centerLabel: true);
-	}
+		if (type == null)
+		{
+			return null;
+		}
 
-	public static void EndDrawBoxedSubclassElement()
-	{
-		SirenixEditorGUI.EndBox();
+		if (typeof(UnityEngine.Object).IsAssignableFrom(type))
+		{
+			return null;
+		}
+
+		ConstructorInfo constructor = type.GetConstructor(Type.EmptyTypes);
+		if (constructor != null)
+		{
+			var instance = constructor.Invoke(null);
+			return instance;
+		}
+		else
+		{
+			var instance = Sirenix.Serialization.UnitySerializationUtility.CreateDefaultUnityInitializedObject(type); 
+			return instance;
+		}
 	}
 
 	#endregion

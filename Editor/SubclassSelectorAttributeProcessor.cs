@@ -5,6 +5,12 @@ using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities;
 
+/// <summary>
+/// Attribute processor for <see cref="SubclassPathAttribute"/>. 
+/// For collections it will assign a <see cref="ListDrawerSettingsAttribute.CustomAddFunction"/> to enable the type selector.
+/// For fields it will apply <see cref="HideLabelAttribute"/> is desired.
+/// Will apply <see cref="HideReferenceObjectPickerAttribute"/> in both instances if desired.
+/// </summary>
 internal sealed class SubclassSelectorAttributeProcessor<T> : OdinAttributeProcessor<T> where T : class
 {
 	#region Internal Members
@@ -13,7 +19,6 @@ internal sealed class SubclassSelectorAttributeProcessor<T> : OdinAttributeProce
 	private ICollectionResolver collectionResolver;
 
 	private bool isCollection = false;
-	private bool parentIsCollection = false;
 
 	#endregion
 
@@ -26,30 +31,20 @@ internal sealed class SubclassSelectorAttributeProcessor<T> : OdinAttributeProce
 			return false;
 		}
 
-		bool isUnityObject;
 		collectionResolver = property.ChildResolver as ICollectionResolver;
 		isCollection = collectionResolver != null;
 
-		if (isCollection)
+		if (!isCollection)
 		{
-			Type elementType = collectionResolver.ElementType;
-			isUnityObject = typeof(UnityEngine.Object).IsAssignableFrom(elementType);
+			Type type = property.ValueEntry.TypeOfValue;
+			bool isUnityObject = typeof(UnityEngine.Object).IsAssignableFrom(type);
 			return !isUnityObject;
 		}
 		else
 		{
-			collectionResolver = property.ParentValueProperty?.ChildResolver as ICollectionResolver ?? null;
-			parentIsCollection = collectionResolver != null;
-			isUnityObject = typeof(UnityEngine.Object).IsAssignableFrom(property.ValueEntry.BaseValueType);
-
-			if (parentIsCollection)
-			{
-				return !isUnityObject && subclassSelector.DrawDropdownForListElements;
-			}
-			else
-			{
-				return !isUnityObject;
-			}
+			Type elementType = collectionResolver.ElementType;
+			bool isUnityObject = typeof(UnityEngine.Object).IsAssignableFrom(elementType);
+			return !isUnityObject;
 		}
 	}
 
@@ -62,19 +57,18 @@ internal sealed class SubclassSelectorAttributeProcessor<T> : OdinAttributeProce
 			attributes.Add(hideReferencePicker);
 		}
 
-		var hideLabel = property.Attributes.GetAttribute<HideLabelAttribute>();
-
-		if (subclassSelector.HideClassLabel && hideLabel == null)
+		if (!isCollection)
 		{
-			hideLabel = new HideLabelAttribute();
-			attributes.Add(hideLabel);
+			var hideLabel = property.Attributes.GetAttribute<HideLabelAttribute>();
+
+			if (subclassSelector.HideClassLabel && hideLabel == null)
+			{
+				hideLabel = new HideLabelAttribute();
+				attributes.Add(hideLabel);
+			}
 		}
-
-		if (isCollection)
+		else
 		{
-			var labelText = new LabelTextAttribute(property.NiceName);
-			attributes.Add(labelText);
-
 			var lds = property.Attributes.GetAttribute<ListDrawerSettingsAttribute>();
 
 			if (lds == null)
@@ -84,29 +78,6 @@ internal sealed class SubclassSelectorAttributeProcessor<T> : OdinAttributeProce
 			}
 
 			lds.CustomAddFunction = SubclassSelectorUtilities.OpenSubclassSelectorString;
-
-			if (subclassSelector.DrawBoxForListElements)
-			{
-				lds.OnBeginListElementGUI = SubclassSelectorUtilities.OnBeginBoxSubclassElementString;
-				lds.OnEndListElementGUI = SubclassSelectorUtilities.OnEndBoxSubclassElementString;
-			}
-		}
-		else
-		{
-			var typeFilter = new TypeFilterAttribute(SubclassSelectorUtilities.TypeFilterResolverString);
-
-			if (parentIsCollection)
-			{
-				typeFilter.DrawValueNormally = true;
-			}
-			else
-			{
-				bool valueIsNull = property.ValueEntry.WeakSmartValue == null;
-				bool hidePicker = subclassSelector.HideReferencePicker;
-				typeFilter.DrawValueNormally = !valueIsNull || !hidePicker;
-			}
-
-			attributes.Add(typeFilter);
 		}
 	}
 

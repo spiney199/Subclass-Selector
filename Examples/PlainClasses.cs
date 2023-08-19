@@ -1,3 +1,5 @@
+using UnityEngine;
+
 public static class PlainClasses
 {
 	public interface IBaseInterface { }
@@ -6,33 +8,33 @@ public static class PlainClasses
 	[SubclassPath(SubClassName = "Base Class")]
 	public class ClassBase : IBaseInterface
 	{
-		public string TestString;
+		[field: SerializeField, HideInDerivedTypes]
+		public string TestString { get; set; }
 	}
 
 	[System.Serializable]
 	[SubclassPath("Derived", "Class A")]
 	public class ClassA : ClassBase
 	{
-		public float ClassAFloat;
+		[SerializeField]
+		private float _ClassAFloat;
 	}
 
 	[System.Serializable]
 	[SubclassPath("Derived", "Class B")]
 	public class ClassB : ClassA
 	{
-		public GameObject ClassCGameObject;
+		[SerializeField]
+		private GameObject _classCGameObject;
 	}
 
 	[System.Serializable]
 	[SubclassPath("Derived", "Class C")]
 	public class ClassC : ClassBase
 	{
-		public ClassC(ClassBase classBase)
-		{
-			this.TestString = classBase.TestString;
-			this._classCBool = true;
-		}
+		[SerializeField]
+		private bool _classCBool;
 
-		public bool ClassCBool;
+		public bool ClassCBool => _classCBool;
 	}
 }
