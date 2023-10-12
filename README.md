@@ -71,3 +71,6 @@ public static class PlainClasses
 + **DrawBoxForListElements** - If true, will draw collection elements in a BoxGroup-style box. Only affects the elements of collections.
 + **CustomTypeFilter** - A string resolved as a ValueResolver. Can be used to add extra filtering logic after all sub-types are generated. Provides a System.Type `$type` named value. Note that abstract types are already filtered.
 + **OnTypesSelected** - An action resolver that can be used to override how types are initialised and added to either fields or collections. Collections provide a $type named parameter and passing a collection of selected types, and fields have a $type named parameter and pass the selected type.
+
+# Installation
+This plugin can be installed by adding this package via a git URL: `https://github.com/spiney199/Subclass-Selector.git?path=Assets/Subclass-Selector/Subclass-Selector`
