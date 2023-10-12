@@ -6,9 +6,9 @@ namespace LBG.Demo
 	using Sirenix.OdinInspector;
 	using Sirenix.Utilities;
 
-	#if UNITY_EDITOR
+#if UNITY_EDITOR
 	using Sirenix.OdinInspector.Editor;
-	#endif
+#endif
 
 	[CreateAssetMenu(menuName = "LBG-Testing/Subclass Selector Test Asset")]
 	public sealed class SubclassSelectorExample : SerializedScriptableObject
@@ -45,7 +45,7 @@ namespace LBG.Demo
 		
 		[BoxGroup("C")]
 		[InfoBox("Does not work on anything inheriting from UnityEngine.Object.")]
-		[SerializeField, SubclassSelector]
+		[SerializeField]
 		private List<ScriptableObject> scriptableObjects = new();
 
 		#endregion
@@ -55,7 +55,7 @@ namespace LBG.Demo
 		// Supports overriding the assignment of selected type, or the adding of selected types to a collection.
 		// Fields provide a $type named value, and collections a $types named value.
 
-	#if UNITY_EDITOR
+#if UNITY_EDITOR
 		public void UpdateInstance(InspectorProperty property, Type type)
 		{
 			Debug.Log(type.GetNiceName());
@@ -77,7 +77,7 @@ namespace LBG.Demo
 				collectionResolver.ApplyChanges();
 			}
 		}
-	#endif
+#endif
 
 		// Supports a value resolver for filtering types after subtypes have been generated.
 		// This example will filter out any types that are derived from or match an existing type in the stack collection.

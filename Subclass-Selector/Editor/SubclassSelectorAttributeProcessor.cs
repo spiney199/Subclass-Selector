@@ -85,5 +85,5 @@ namespace LBG.Editor.Processors
 
 		#endregion
 	}
-	#endif
 }
+#endif

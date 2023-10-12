@@ -308,5 +308,5 @@ namespace LBG.Editor
 
 		#endregion
 	}
-	#endif
 }
+#endif

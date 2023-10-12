@@ -48,5 +48,5 @@ namespace LBG.Editor.Drawers
 
 		#endregion
 	}
-	#endif
 }
+#endif
