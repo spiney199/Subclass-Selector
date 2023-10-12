@@ -1,7 +1,6 @@
 namespace LBG.Demo
 {
 	using UnityEngine;
-	using LizardBrainGames.Serialisation;
 
 	public static class PlainClasses
 	{
@@ -9,10 +8,9 @@ namespace LBG.Demo
 
 		[System.Serializable]
 		[SubclassPath(SubClassName = "Base Class")]
-		[AllowedSubtypes(typeof(ClassA), typeof(ClassB))]
 		public class ClassBase : IBaseInterface
 		{
-			[field: SerializeField, HideInDerivedTypes]
+			[field: SerializeField]
 			public string TestString { get; set; }
 		}
 
