@@ -1,0 +1,18 @@
+{
+    "name": "LBG-SubclassSelector-Editor",
+    "rootNamespace": "LBG.Editor",
+    "references": [
+        "GUID:8d2717d6e3e0f174c983290a3fe3eff4"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
