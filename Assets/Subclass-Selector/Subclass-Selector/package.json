@@ -2,7 +2,7 @@
 	"name": "com.lbg.subclassselector",
 	"displayName": "LBG Subclass-Selector",
 	"author": { "name": "Lizard In A Box Games" },
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"unity": "2019.4",
 	"description": "Plugin that adds better polymorphic selector support to Odin Inspector.",
 	"keywords": [ "Plugin" ],
